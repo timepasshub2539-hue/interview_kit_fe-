@@ -204,6 +204,11 @@ export default function Interview() {
   const cardStyle = { background: isDark ? 'rgba(6,14,32,0.92)' : 'rgba(255,255,255,0.9)', border: `1px solid ${isDark ? 'rgba(96,165,250,0.2)' : 'rgba(99,102,241,0.2)'}`, backdropFilter:'blur(24px)' }
   const btnStyle  = { background:'linear-gradient(135deg,#3b82f6,#7c3aed)', boxShadow:'0 0 20px rgba(96,165,250,0.3)' }
 
+  const ariaMascotTheme = scoring ? 'thinking' : answer ? (answer.score >= 85 ? 'celebrating' : 'thinking') : isCodeQuestion ? 'coding' : isSqlQuestion ? 'thinking' : 'interview'
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('aria-mascot:theme', { detail: ariaMascotTheme }))
+  }, [ariaMascotTheme])
+
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-2" style={{background:'var(--bg)'}}>
       <AppBackground />
@@ -246,12 +251,6 @@ export default function Interview() {
       </div>
     </div>
   )
-
-  // Aria's theme depends on what's happening — drive the ChatWidget mascot
-  const ariaMascotTheme = scoring ? 'thinking' : answer ? (answer.score >= 85 ? 'celebrating' : 'thinking') : isCodeQuestion ? 'coding' : isSqlQuestion ? 'thinking' : 'interview'
-  useEffect(() => {
-    window.dispatchEvent(new CustomEvent('aria-mascot:theme', { detail: ariaMascotTheme }))
-  }, [ariaMascotTheme])
 
   return (
     <div className="min-h-screen overflow-hidden" style={{ background: 'var(--bg)' }}>
