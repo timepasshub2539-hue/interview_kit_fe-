@@ -15,6 +15,7 @@ import BehavioralBank from './pages/BehavioralBank'
 import StudyCourse from './pages/StudyCourse'
 import ChatWidget from './components/ChatWidget'
 import ErrorBoundary from './components/ErrorBoundary'
+import { Analytics as VercelAnalytics } from '@vercel/analytics/react'
 
 function PrivateRoute({ children }) {
   return localStorage.getItem('access_token') ? children : <Navigate to="/login" replace />
@@ -52,6 +53,7 @@ export default function App() {
       <BrowserRouter>
         <AppContent />
       </BrowserRouter>
+      <VercelAnalytics />
     </ThemeProvider>
   )
 }
