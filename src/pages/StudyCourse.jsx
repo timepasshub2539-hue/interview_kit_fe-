@@ -124,22 +124,38 @@ function Quiz({ questions, conceptId, initialScore }) {
 
 // ── Create Custom Course Modal ────────────────────────────────────────────────
 
-function CreateCourseModal({ onClose, onCreate }) {
+function CreateCourseModal({ onClose, onCreate, existingCourses = [] }) {
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [duplicate, setDuplicate] = useState(null) // matched existing course name
 
-  async function handleSubmit(e) {
-    e.preventDefault()
-    if (!name.trim()) return
+  function findDuplicate(input) {
+    const normalized = input.trim().toLowerCase()
+    return existingCourses.find(c => c.name.toLowerCase() === normalized) || null
+  }
+
+  async function doGenerate() {
     setLoading(true)
     setError(null)
+    setDuplicate(null)
     try {
       const course = await api.createCustomCourse(name.trim())
       onCreate(course)
     } catch (err) {
       setError(err.message || 'Failed to generate course. Please try again.')
       setLoading(false)
+    }
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (!name.trim()) return
+    const match = findDuplicate(name)
+    if (match) {
+      setDuplicate(match)
+    } else {
+      doGenerate()
     }
   }
 
@@ -166,6 +182,27 @@ function CreateCourseModal({ onClose, onCreate }) {
             <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>AI is building your curriculum…</p>
             <p className="text-xs text-center" style={{ color: 'var(--text-3)' }}>This takes 10–20 seconds. Hang tight!</p>
           </div>
+        ) : duplicate ? (
+          <div>
+            <div className="mb-5 px-4 py-4 rounded-xl" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)' }}>
+              <p className="text-sm font-semibold mb-1" style={{ color: '#fbbf24' }}>Course already exists</p>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--text-2)' }}>
+                <span className="font-medium" style={{ color: 'var(--text)' }}>"{duplicate.name}"</span> is already in your course list. Do you want to create another one anyway?
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => setDuplicate(null)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-2)', border: '1px solid var(--border)' }}>
+                Go Back
+              </button>
+              <button onClick={doGenerate}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all"
+                style={{ background: 'linear-gradient(135deg,#f59e0b,#f97316)' }}>
+                Continue Anyway
+              </button>
+            </div>
+          </div>
         ) : (
           <form onSubmit={handleSubmit}>
             <label className="block text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: 'var(--text-3)' }}>
@@ -174,7 +211,7 @@ function CreateCourseModal({ onClose, onCreate }) {
             <input
               type="text"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={e => { setName(e.target.value); setError(null) }}
               placeholder="e.g. Machine Learning with PyTorch"
               autoFocus
               className="w-full text-sm rounded-xl px-4 py-3 outline-none mb-4"
@@ -398,6 +435,7 @@ export default function StudyCourse() {
         <CreateCourseModal
           onClose={() => setShowCreateModal(false)}
           onCreate={handleCourseCreated}
+          existingCourses={courses}
         />
       )}
 
